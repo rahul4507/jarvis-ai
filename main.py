@@ -15,7 +15,7 @@ from pathlib import Path
 import queue
 
 # 🔐 Configuration
-API_KEY = "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"
+API_KEY = "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"
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 HEADERS = {

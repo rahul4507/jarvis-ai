@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-weight: 500;
+        }
+
+        .status-item .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-active { background: #4CAF50; }
+        .status-inactive { background: #f44336; }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 250px);
+        }
+
+        .left-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            color: white;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user {
+            background: rgba(100, 149, 237, 0.8);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .message.jarvis {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-right: auto;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #userInput {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #userInput:focus {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #4ECDC4, #6BD6CE);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .command-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        .command-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .command-card .icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .command-card .title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        .command-card .description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .listening-indicator {
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 1.5s infinite;
+            display: none;
+        }
+
+        @keyframes pulse {
+            0% { transform: translateY(-50%) scale(1); opacity: 1; }
+            50% { transform: translateY(-50%) scale(1.2); opacity: 0.7; }
+            100% { transform: translateY(-50%) scale(1); opacity: 1; }
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .typing-dots {
+            display: inline-block;
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.8);
+            margin-left: 10px;
+            animation: typing 1.4s infinite;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: scale(1); }
+            30% { transform: scale(1.5); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .commands-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 JARVIS</h1>
+            <p>Your Intelligent AI Assistant</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="dot status-active"></div>
+                <span>AI Service: Online</span>
+            </div>
+            <div class="status-item">
+                <div class="dot" id="micStatus"></div>
+                <span id="micStatusText">Microphone: Checking...</span>
+            </div>
+            <div class="status-item">
+                <div class="dot status-active"></div>
+                <span>System: Ready</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-title">💬 Chat Interface</div>
+                
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="textModeBtn">📝 Text Mode</button>
+                    <button class="mode-btn" id="voiceModeBtn">🎤 Voice Mode</button>
+                </div>
+
+                <div class="chat-container" id="chatContainer">
+                    <div class="message jarvis">
+                        <strong>Jarvis:</strong> Hello! I'm ready to assist you. You can type commands or ask me anything.
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <span>Jarvis is thinking</span>
+                    <div class="typing-dots"></div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-container">
+                        <input type="text" id="userInput" placeholder="Type your command or question here..." />
+                        <div class="listening-indicator" id="listeningIndicator"></div>
+                    </div>
+                    <button class="btn btn-primary" id="sendBtn">Send</button>
+                    <button class="btn btn-secondary" id="voiceBtn">🎤 Voice</button>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="panel-title">⚡ Quick Commands</div>
+                <div class="commands-grid">
+                    <div class="command-card" data-command="time">
+                        <div class="icon">🕐</div>
+                        <div class="title">Time</div>
+                        <div class="description">Current time</div>
+                    </div>
+                    <div class="command-card" data-command="date">
+                        <div class="icon">📅</div>
+                        <div class="title">Date</div>
+                        <div class="description">Today's date</div>
+                    </div>
+                    <div class="command-card" data-command="open chrome">
+                        <div class="icon">🌐</div>
+                        <div class="title">Chrome</div>
+                        <div class="description">Open browser</div>
+                    </div>
+                    <div class="command-card" data-command="open notepad">
+                        <div class="icon">📝</div>
+                        <div class="title">Notepad</div>
+                        <div class="description">Text editor</div>
+                    </div>
+                    <div class="command-card" data-command="open calculator">
+                        <div class="icon">🧮</div>
+                        <div class="title">Calculator</div>
+                        <div class="description">Math tools</div>
+                    </div>
+                    <div class="command-card" data-command="system info">
+                        <div class="icon">💻</div>
+                        <div class="title">System Info</div>
+                        <div class="description">PC status</div>
+                    </div>
+                    <div class="command-card" data-command="volume up">
+                        <div class="icon">🔊</div>
+                        <div class="title">Volume Up</div>
+                        <div class="description">Increase sound</div>
+                    </div>
+                    <div class="command-card" data-command="screenshot">
+                        <div class="icon">📸</div>
+                        <div class="title">Screenshot</div>
+                        <div class="description">Capture screen</div>
+                    </div>
+                    <div class="command-card" data-command="search google for weather">
+                        <div class="icon">🌤️</div>
+                        <div class="title">Weather</div>
+                        <div class="description">Search weather</div>
+                    </div>
+                    <div class="command-card" data-command="help">
+                        <div class="icon">❓</div>
+                        <div class="title">Help</div>
+                        <div class="description">All commands</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class JarvisUI {
+            constructor() {
+                this.isListening = false;
+                this.isVoiceMode = false;
+                this.recognition = null;
+                this.synthesis = window.speechSynthesis;
+                this.currentVoice = null;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.setupSpeechRecognition();
+                this.setupSpeechSynthesis();
+                this.checkMicrophoneAccess();
+            }
+
+            initializeElements() {
+                this.userInput = document.getElementById('userInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.voiceBtn = document.getElementById('voiceBtn');
+                this.chatContainer = document.getElementById('chatContainer');
+                this.textModeBtn = document.getElementById('textModeBtn');
+                this.voiceModeBtn = document.getElementById('voiceModeBtn');
+                this.listeningIndicator = document.getElementById('listeningIndicator');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                this.micStatus = document.getElementById('micStatus');
+                this.micStatusText = document.getElementById('micStatusText');
+            }
+
+            setupEventListeners() {
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.voiceBtn.addEventListener('click', () => this.toggleVoiceInput());
+                this.userInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.sendMessage();
+                });
+
+                this.textModeBtn.addEventListener('click', () => this.setMode('text'));
+                this.voiceModeBtn.addEventListener('click', () => this.setMode('voice'));
+
+                // Quick command buttons
+                document.querySelectorAll('.command-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const command = card.dataset.command;
+                        this.userInput.value = command;
+                        this.sendMessage();
+                    });
+                });
+            }
+
+            setupSpeechRecognition() {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    this.recognition = new SpeechRecognition();
+                    this.recognition.continuous = false;
+                    this.recognition.interimResults = false;
+                    this.recognition.lang = 'en-US';
+
+                    this.recognition.onstart = () => {
+                        this.isListening = true;
+                        this.listeningIndicator.style.display = 'block';
+                        this.voiceBtn.textContent = '🛑 Stop';
+                        this.voiceBtn.style.background = 'linear-gradient(45deg, #ff4444, #ff6666)';
+                    };
+
+                    this.recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        this.userInput.value = transcript;
+                        this.sendMessage();
+                    };
+
+                    this.recognition.onend = () => {
+                        this.isListening = false;
+                        this.listeningIndicator.style.display = 'none';
+                        this.voiceBtn.textContent = '🎤 Voice';
+                        this.voiceBtn.style.background = 'linear-gradient(45deg, #4ECDC4, #6BD6CE)';
+                    };
+
+                    this.recognition.onerror = (event) => {
+                        console.error('Speech recognition error:', event.error);
+                        this.addMessage('jarvis', 'Sorry, I couldn\'t understand that. Please try again.');
+                        this.recognition.stop();
+                    };
+                }
+            }
+
+            setupSpeechSynthesis() {
+                if (this.synthesis) {
+                    this.synthesis.onvoiceschanged = () => {
+                        const voices = this.synthesis.getVoices();
+                        this.currentVoice = voices.find(voice => voice.name.includes('Google') || voice.name.includes('Microsoft')) || voices[0];
+                    };
+                }
+            }
+
+            async checkMicrophoneAccess() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    this.micStatus.className = 'dot status-active';
+                    this.micStatusText.textContent = 'Microphone: Ready';
+                } catch (error) {
+                    this.micStatus.className = 'dot status-inactive';
+                    this.micStatusText.textContent = 'Microphone: Not Available';
+                    this.voiceBtn.disabled = true;
+                    this.voiceModeBtn.disabled = true;
+                }
+            }
+
+            setMode(mode) {
+                if (mode === 'text') {
+                    this.isVoiceMode = false;
+                    this.textModeBtn.classList.add('active');
+                    this.voiceModeBtn.classList.remove('active');
+                    this.userInput.placeholder = 'Type your command or question here...';
+                } else {
+                    this.isVoiceMode = true;
+                    this.voiceModeBtn.classList.add('active');
+                    this.textModeBtn.classList.remove('active');
+                    this.userInput.placeholder = 'Click the voice button to speak...';
+                }
+            }
+
+            toggleVoiceInput() {
+                if (this.isListening) {
+                    this.recognition.stop();
+                } else {
+                    this.recognition.start();
+                }
+            }
+
+            addMessage(sender, message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+                
+                if (sender === 'user') {
+                    messageDiv.innerHTML = `<strong>You:</strong> ${message}`;
+                } else {
+                    messageDiv.innerHTML = `<strong>Jarvis:</strong> ${message}`;
+                }
+                
+                this.chatContainer.appendChild(messageDiv);
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+
+            showTypingIndicator() {
+                this.typingIndicator.style.display = 'flex';
+            }
+
+            hideTypingIndicator() {
+                this.typingIndicator.style.display = 'none';
+            }
+
+            speak(text) {
+                if (this.synthesis && this.currentVoice) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.voice = this.currentVoice;
+                    utterance.rate = 0.9;
+                    utterance.pitch = 1;
+                    this.synthesis.speak(utterance);
+                }
+            }
+
+            async sendMessage() {
+                const message = this.userInput.value.trim();
+                if (!message) return;
+
+                this.addMessage('user', message);
+                this.userInput.value = '';
+                this.showTypingIndicator();
+
+                try {
+                    const response = await this.processCommand(message);
+                    this.hideTypingIndicator();
+                    this.addMessage('jarvis', response);
+                    this.speak(response);
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.addMessage('jarvis', 'Sorry, I encountered an error processing your request.');
+                }
+            }
+
+            async processCommand(command) {
+                try {
+                    // Send command to Flask backend
+                    const response = await fetch('/api/process_command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            command: command
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        return data.response;
+                    } else {
+                        return `Error: ${data.error}`;
+                    }
+                } catch (error) {
+                    console.error('Error processing command:', error);
+                    // Fallback to basic responses if backend is unavailable
+                    return this.getFallbackResponse(command);
+                }
+            }
+
+            getFallbackResponse(command) {
+                const cmd = command.toLowerCase();
+                
+                if (cmd.includes('time')) {
+                    return `The current time is ${new Date().toLocaleTimeString()}`;
+                } else if (cmd.includes('date')) {
+                    return `Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+                } else if (cmd.includes('hello') || cmd.includes('hi')) {
+                    return 'Hello! How can I assist you today?';
+                } else if (cmd.includes('help')) {
+                    return 'I can help you with system commands, opening applications, web searches, and answer questions. Use the quick command buttons or just ask me anything!';
+                } else {
+                    return `Backend unavailable. Command received: "${command}". Please ensure the Flask server is running.`;
+                }
+            }
+        }
+
+        // Initialize the application
+        window.addEventListener('load', () => {
+            new JarvisUI();
+        });
+    </script>
+</body>
+</html>
